@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puente — Remesas sin fronteras</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#0052ff;--blue-light:#e8f0fe;--blue-dark:#003ecb;
+  --amber:#f59e0b;--amber-light:#fef3c7;--amber-dark:#d97706;
+  --green:#10b981;--green-light:#d1fae5;
+  --red:#ef4444;--red-light:#fee2e2;
+  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;
+  --gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;
+  --gray-800:#1f2937;--gray-900:#111827;
+  --white:#ffffff;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.08),0 2px 4px -2px rgba(0,0,0,.06);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -4px rgba(0,0,0,.06);
+  --radius:12px;--radius-sm:8px;--radius-xs:6px;
+}
+html,body{height:100%;font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--gray-50);color:var(--gray-800);-webkit-font-smoothing:antialiased}
+
+/* Layout */
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* Sidebar */
+.sidebar{width:240px;background:var(--white);border-right:1px solid var(--gray-200);display:flex;flex-direction:column;flex-shrink:0;z-index:10}
+.sidebar-logo{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--gray-100)}
+.sidebar-logo .logo-icon{width:40px;height:40px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:18px}
+.sidebar-logo h1{font-size:20px;font-weight:700;color:var(--gray-900);letter-spacing:-.3px}
+.sidebar-logo span{font-size:11px;color:var(--gray-400);font-weight:500;display:block;margin-top:1px}
+.sidebar-nav{flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:2px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;font-weight:500;color:var(--gray-500);transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--gray-50);color:var(--gray-700)}
+.nav-item.active{background:var(--blue-light);color:var(--blue);font-weight:600}
+.nav-item .nav-icon{font-size:18px;width:24px;text-align:center}
+.nav-item .nav-badge{margin-left:auto;background:var(--amber);color:white;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--gray-100)}
+.sidebar-user{display:flex;align-items:center;gap:10px}
+.sidebar-user .avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.sidebar-user .user-info{flex:1}
+.sidebar-user .user-name{font-size:13px;font-weight:600;color:var(--gray-800)}
+.sidebar-user .user-status{font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px}
+.sidebar-user .user-status::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%}
+
+/* Main */
+.main{flex:1;overflow-y:auto;padding:0}
+.page{display:none;padding:32px 40px;max-width:1200px;animation:fadeIn .25s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* Headings */
+.page-header{margin-bottom:28px}
+.page-header h2{font-size:26px;font-weight:700;color:var(--gray-900);letter-spacing:-.5px}
+.page-header p{font-size:14px;color:var(--gray-500);margin-top:4px}
+
+/* Cards */
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:24px;box-shadow:var(--shadow)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600;color:var(--gray-700);text-transform:uppercase;letter-spacing:.5px}
+
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
+
+/* Balance Card */
+.balance-card{background:linear-gradient(135deg,var(--blue) 0%,#1a6dff 50%,#3d7eff 100%);border-radius:var(--radius);padding:32px;color:white;position:relative;overflow:hidden}
+.balance-card::after{content:'';position:absolute;top:-50%;right:-20%;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.06)}
+.balance-card .balance-label{font-size:13px;opacity:.8;font-weight:500;margin-bottom:6px}
+.balance-card .balance-amount{font-size:42px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+.balance-card .balance-secondary{font-size:16px;opacity:.7;font-weight:500;margin-top:8px}
+.balance-card .balance-row{display:flex;align-items:flex-end;justify-content:space-between;position:relative;z-index:1}
+
+/* Stat Cards */
+.stat-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:20px;box-shadow:var(--shadow)}
+.stat-card .stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px}
+.stat-card .stat-value{font-size:24px;font-weight:700;color:var(--gray-900);letter-spacing:-.5px}
+.stat-card .stat-label{font-size:12px;color:var(--gray-500);margin-top:2px;font-weight:500}
+
+/* Savings Bar */
+.savings-bar{background:var(--green-light);border:1px solid #a7f3d0;border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center;gap:16px;margin-top:20px}
+.savings-bar .savings-icon{font-size:28px}
+.savings-bar .savings-text{flex:1}
+.savings-bar .savings-amount{font-size:22px;font-weight:700;color:#065f46}
+.savings-bar .savings-label{font-size:13px;color:#047857;margin-top:2px}
+.savings-compare{display:flex;gap:8px;margin-top:12px;align-items:center}
+.compare-bar{height:8px;border-radius:4px}
+.compare-traditional{background:var(--red);opacity:.6}
+.compare-puente{background:var(--green)}
+.compare-labels{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--gray-500)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit}
+.btn-primary{background:var(--blue);color:white}.btn-primary:hover{background:var(--blue-dark);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-secondary{background:var(--gray-100);color:var(--gray-700)}.btn-secondary:hover{background:var(--gray-200)}
+.btn-success{background:var(--green);color:white}.btn-success:hover{background:#059669}
+.btn-amber{background:var(--amber);color:white}.btn-amber:hover{background:var(--amber-dark)}
+.btn-lg{padding:14px 28px;font-size:16px;border-radius:var(--radius)}
+.btn-full{width:100%}
+.btn-outline{background:transparent;border:1.5px solid var(--gray-300);color:var(--gray-600)}.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+
+/* Forms */
+.form-group{margin-bottom:20px}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--gray-600);margin-bottom:6px}
+.form-input{width:100%;padding:11px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;transition:border-color .15s;background:var(--white);color:var(--gray-800)}
+.form-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,82,255,.1)}
+.form-input::placeholder{color:var(--gray-400)}
+select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.amount-input-wrap{position:relative}
+.amount-input-wrap .currency-tag{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--gray-400)}
+.amount-input-wrap input{padding-right:50px;font-size:24px;font-weight:700;letter-spacing:-.5px;padding-top:14px;padding-bottom:14px}
+
+/* Fee comparison */
+.fee-compare{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px}
+.fee-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px}
+.fee-row.traditional{color:var(--gray-500);text-decoration:line-through;opacity:.7}
+.fee-row.puente{color:var(--green);font-weight:600}
+.fee-savings{background:var(--green-light);color:#065f46;font-weight:700;padding:10px 16px;border-radius:var(--radius-xs);text-align:center;font-size:14px;margin-top:8px}
+
+/* Conversion preview */
+.conversion-preview{background:linear-gradient(135deg,#fefbf3,#fef9ee);border:1px solid #fde68a;border-radius:var(--radius-sm);padding:16px;text-align:center;margin-bottom:20px}
+.conversion-preview .conv-amount{font-size:28px;font-weight:800;color:var(--amber-dark);letter-spacing:-.5px}
+.conversion-preview .conv-label{font-size:12px;color:var(--gray-500);margin-top:2px}
+.conversion-preview .conv-rate{font-size:11px;color:var(--gray-400);margin-top:6px}
+
+/* Tandas */
+.tanda-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);cursor:pointer;transition:all .15s}
+.tanda-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md)}
+.tanda-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.tanda-avatar-group{display:flex}
+.tanda-avatar-group .t-avatar{width:32px;height:32px;border-radius:50%;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;margin-left:-8px}
+.tanda-avatar-group .t-avatar:first-child{margin-left:0}
+.tanda-name{font-size:16px;font-weight:700;color:var(--gray-900)}
+.tanda-meta{font-size:12px;color:var(--gray-500);margin-top:2px}
+.tanda-progress{margin-top:14px}
+.tanda-progress-bar{height:6px;background:var(--gray-200);border-radius:3px;overflow:hidden}
+.tanda-progress-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .3s}
+.tanda-stats{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--gray-500)}
+.tanda-members-list{margin-top:16px}
+.tanda-member-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)}
+.tanda-member-row:last-child{border-bottom:none}
+.tanda-member-row .m-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white}
+.tanda-member-row .m-name{flex:1;font-size:13px;font-weight:500}
+.tanda-member-row .m-status{font-size:16px}
+.tanda-member-row .m-amount{font-size:12px;color:var(--gray-500)}
+.payout-calendar{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.payout-slot{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:1px solid var(--gray-200)}
+.payout-slot.done{background:var(--green-light);border-color:var(--green);color:#065f46}
+.payout-slot.current{background:var(--blue-light);border-color:var(--blue);color:var(--blue)}
+.payout-slot.upcoming{background:var(--gray-50);color:var(--gray-400)}
+
+/* Transaction list */
+.tx-list{display:flex;flex-direction:column}
+.tx-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--gray-100)}
+.tx-row:last-child{border-bottom:none}
+.tx-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.tx-icon.outgoing{background:#fee2e2;color:var(--red)}
+.tx-icon.incoming{background:var(--green-light);color:var(--green)}
+.tx-info{flex:1}
+.tx-info .tx-recipient{font-size:14px;font-weight:600;color:var(--gray-800)}
+.tx-info .tx-date{font-size:12px;color:var(--gray-400);margin-top:1px}
+.tx-amounts{text-align:right}
+.tx-amounts .tx-usd{font-size:14px;font-weight:600;color:var(--gray-900)}
+.tx-amounts .tx-mxn{font-size:12px;color:var(--gray-500)}
+.tx-status{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.tx-status.completed{background:var(--green-light);color:#065f46}
+.tx-status.pending{background:var(--amber-light);color:#92400e}
+.tx-status.refunded{background:var(--gray-100);color:var(--gray-500)}
+.tx-hash{font-size:10px;color:var(--gray-400);font-family:monospace;margin-top:3px}
+
+/* Filters */
+.filters-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.filter-chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--gray-200);background:white;color:var(--gray-600);transition:all .15s}
+.filter-chip.active,.filter-chip:hover{background:var(--blue);color:white;border-color:var(--blue)}
+
+/* Profile */
+.kyc-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600}
+.kyc-badge.basic{background:#dbeafe;color:#1e40af}
+.kyc-badge.enhanced{background:var(--amber-light);color:#92400e}
+.kyc-badge.full{background:var(--green-light);color:#065f46}
+.kyc-badge.none{background:var(--gray-100);color:var(--gray-500)}
+.kyc-tiers{margin-top:16px}
+.kyc-tier{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--radius-sm);margin-bottom:8px;border:1px solid var(--gray-200)}
+.kyc-tier.current{border-color:var(--blue);background:var(--blue-light)}
+.kyc-tier .tier-name{font-size:13px;font-weight:600;flex:1}
+.kyc-tier .tier-limit{font-size:12px;color:var(--gray-500)}
+.wallet-address{font-family:monospace;font-size:12px;color:var(--gray-500);background:var(--gray-50);padding:8px 12px;border-radius:var(--radius-xs);word-break:break-all;margin-top:8px}
+.referral-box{background:linear-gradient(135deg,#fef3c7,#fefce8);border:1px solid #fde68a;border-radius:var(--radius);padding:20px;margin-top:20px}
+.referral-box h4{font-size:14px;font-weight:700;color:var(--amber-dark);margin-bottom:4px}
+.referral-box p{font-size:13px;color:var(--gray-600)}
+.referral-link{display:flex;gap:8px;margin-top:10px}
+.referral-link input{flex:1;font-size:12px;font-family:monospace;padding:8px 10px;border:1px solid var(--gray-200);border-radius:var(--radius-xs);background:white}
+
+/* Monthly summary */
+.monthly-summary{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.monthly-card{background:var(--gray-50);border-radius:var(--radius-sm);padding:16px;text-align:center}
+.monthly-card .mc-value{font-size:22px;font-weight:700;color:var(--gray-900)}
+.monthly-card .mc-label{font-size:11px;color:var(--gray-500);margin-top:2px}
+
+/* Confirmation modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.active{opacity:1;pointer-events:all}
+.modal{background:white;border-radius:16px;padding:32px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.15);transform:scale(.95);transition:transform .2s}
+.modal-overlay.active .modal{transform:scale(1)}
+.modal h3{font-size:20px;font-weight:700;color:var(--gray-900);margin-bottom:20px;text-align:center}
+.modal .detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100);font-size:14px}
+.modal .detail-row .dl{color:var(--gray-500)}.modal .detail-row .dv{font-weight:600;color:var(--gray-800)}
+.modal .modal-actions{display:flex;gap:10px;margin-top:24px}
+
+/* Receipt */
+.receipt{text-align:center;padding:20px}
+.receipt .receipt-check{width:60px;height:60px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px}
+.receipt h3{font-size:20px;font-weight:700;color:var(--gray-900)}
+.receipt .receipt-amount{font-size:32px;font-weight:800;color:var(--green);margin:8px 0}
+.receipt .receipt-hash{font-family:monospace;font-size:11px;color:var(--gray-400);background:var(--gray-50);padding:6px 12px;border-radius:4px;margin-top:12px;word-break:break-all}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--gray-800);color:white;padding:12px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(100px);opacity:0;transition:all .3s;z-index:200}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* Quick-send row */
+.quick-send{display:flex;gap:12px;margin-top:20px;align-items:center}
+.quick-contact{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.quick-contact .qc-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;transition:transform .15s}
+.quick-contact:hover .qc-avatar{transform:scale(1.08)}
+.quick-contact .qc-name{font-size:11px;color:var(--gray-500);font-weight:500}
+
+/* Tanda create form */
+.tanda-create-form{display:none}
+.tanda-create-form.active{display:block}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{width:64px;overflow:hidden}
+  .sidebar .nav-label,.sidebar-logo h1,.sidebar-logo span,.sidebar-user .user-info,.nav-badge{display:none}
+  .sidebar-logo{padding:16px 12px;justify-content:center}
+  .sidebar-logo .logo-icon{width:36px;height:36px}
+  .nav-item{justify-content:center;padding:10px}
+  .sidebar-footer .sidebar-user{justify-content:center}
+  .page{padding:20px 16px}
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">P</div>
+      <div>
+        <h1>Puente</h1>
+        <span>Remesas sin fronteras</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-tab="inicio">
+        <span class="nav-icon">&#127968;</span>
+        <span class="nav-label">Inicio</span>
+      </button>
+      <button class="nav-item" data-tab="enviar">
+        <span class="nav-icon">&#128184;</span>
+        <span class="nav-label">Enviar</span>
+      </button>
+      <button class="nav-item" data-tab="tandas">
+        <span class="nav-icon">&#129309;</span>
+        <span class="nav-label">Tandas</span>
+        <span class="nav-badge">1</span>
+      </button>
+      <button class="nav-item" data-tab="historial">
+        <span class="nav-icon">&#128202;</span>
+        <span class="nav-label">Historial</span>
+      </button>
+      <button class="nav-item" data-tab="perfil">
+        <span class="nav-icon">&#128100;</span>
+        <span class="nav-label">Perfil</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">CG</div>
+        <div class="user-info">
+          <div class="user-name">Carlos G.</div>
+          <div class="user-status">Verificado</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- ====== INICIO ====== -->
+    <div class="page active" id="page-inicio">
+      <div class="page-header">
+        <h2>Buenos dias, Carlos</h2>
+        <p>Tu puente financiero hacia Mexico</p>
+      </div>
+
+      <div class="balance-card">
+        <div class="balance-row">
+          <div>
+            <div class="balance-label">Balance disponible</div>
+            <div class="balance-amount">$2,450.00</div>
+            <div class="balance-secondary">MXN $42,022.50</div>
+          </div>
+          <button class="btn btn-amber btn-lg" onclick="switchTab('enviar')" style="position:relative;z-index:1">
+            &#128184; Enviar dinero
+          </button>
+        </div>
+      </div>
+
+      <div class="grid-4" style="margin-top:20px">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--blue-light);color:var(--blue)">&#128176;</div>
+          <div class="stat-value">$4,850</div>
+          <div class="stat-label">Enviado este mes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--green-light);color:var(--green)">&#128178;</div>
+          <div class="stat-value" id="stat-saved">$1,870</div>
+          <div class="stat-label">Ahorrado este ano</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--amber-light);color:var(--amber)">&#128203;</div>
+          <div class="stat-value">12</div>
+          <div class="stat-label">Transacciones</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#ede9fe;color:#7c3aed">&#129309;</div>
+          <div class="stat-value">1</div>
+          <div class="stat-label">Tandas activas</div>
+        </div>
+      </div>
+
+      <!-- Savings comparison -->
+      <div class="savings-bar">
+        <div class="savings-icon">&#127881;</div>
+        <div class="savings-text">
+          <div class="savings-amount">Te ahorraste $1,870 este ano</div>
+          <div class="savings-label">Comparado con servicios tradicionales de remesas</div>
+          <div style="margin-top:12px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+              <span style="font-size:11px;color:var(--gray-500);width:80px">Tradicional</span>
+              <div style="flex:1;height:10px;background:#fecaca;border-radius:5px;position:relative">
+                <div style="width:100%;height:100%;background:var(--red);border-radius:5px;opacity:.6"></div>
+              </div>
+              <span style="font-size:11px;color:var(--red);font-weight:600;width:50px;text-align:right">$2,114</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:11px;color:var(--gray-500);width:80px">Puente</span>
+              <div style="flex:1;height:10px;background:var(--green-light);border-radius:5px;position:relative">
+                <div style="width:12%;height:100%;background:var(--green);border-radius:5px"></div>
+              </div>
+              <span style="font-size:11px;color:var(--green);font-weight:600;width:50px;text-align:right">$244</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Send -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header">
+          <span class="card-title">Envio rapido</span>
+        </div>
+        <div class="quick-send">
+          <div class="quick-contact" onclick="quickSend('Maria Lopez')">
+            <div class="qc-avatar" style="background:var(--amber)">ML</div>
+            <div class="qc-name">Maria L.</div>
+          </div>
+          <div class="quick-contact" onclick="quickSend('Abuela Rosa')">
+            <div class="qc-avatar" style="background:#7c3aed">AR</div>
+            <div class="qc-name">Abuela Rosa</div>
+          </div>
+          <div class="quick-contact" onclick="quickSend('Tio Pedro')">
+            <div class="qc-avatar" style="background:var(--green)">TP</div>
+            <div class="qc-name">Tio Pedro</div>
+          </div>
+          <div class="quick-contact" onclick="quickSend('Prima Ana')">
+            <div class="qc-avatar" style="background:var(--blue)">PA</div>
+            <div class="qc-name">Prima Ana</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header">
+          <span class="card-title">Transacciones recientes</span>
+          <button class="btn btn-secondary" onclick="switchTab('historial')">Ver todo</button>
+        </div>
+        <div class="tx-list" id="recent-tx-list"></div>
+      </div>
+
+      <!-- Active Tandas Summary -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header">
+          <span class="card-title">Tandas activas</span>
+          <button class="btn btn-secondary" onclick="switchTab('tandas')">Ver todas</button>
+        </div>
+        <div id="inicio-tandas-summary"></div>
+      </div>
+    </div>
+
+    <!-- ====== ENVIAR ====== -->
+    <div class="page" id="page-enviar">
+      <div class="page-header">
+        <h2>Enviar dinero</h2>
+        <p>Rapido, seguro y con las mejores tarifas</p>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <!-- Send Form -->
+          <div class="card" id="send-form-card">
+            <div class="form-group">
+              <label class="form-label">Monto a enviar (USD)</label>
+              <div class="amount-input-wrap">
+                <input type="number" class="form-input" id="send-amount" placeholder="0.00" min="1" step="0.01" oninput="updateConversion()">
+                <span class="currency-tag">USD</span>
+              </div>
+            </div>
+
+            <div class="conversion-preview" id="conversion-preview" style="display:none">
+              <div class="conv-label">Tu destinatario recibe</div>
+              <div class="conv-amount" id="conv-amount">$0.00 MXN</div>
+              <div class="conv-rate" id="conv-rate">1 USD = 17.15 MXN</div>
+            </div>
+
+            <div class="fee-compare" id="fee-compare" style="display:none">
+              <div class="fee-row traditional">
+                <span>Servicio tradicional (6.2%)</span>
+                <span id="fee-traditional">$0.00</span>
+              </div>
+              <div class="fee-row puente">
+                <span>Puente (0.5%)</span>
+                <span id="fee-puente">$0.00</span>
+              </div>
+              <div class="fee-savings" id="fee-savings-text">
+                Te ahorras $0.00
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Destinatario</label>
+              <select class="form-input" id="send-recipient">
+                <option value="">Seleccionar destinatario...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">CLABE / Telefono del destinatario</label>
+              <input type="text" class="form-input" id="send-clabe" placeholder="012345678901234567">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Memo (opcional)</label>
+              <input type="text" class="form-input" id="send-memo" placeholder="Para la familia..." maxlength="280">
+            </div>
+
+            <button class="btn btn-primary btn-lg btn-full" id="btn-enviar" onclick="initiateSend()">
+              &#128184; Enviar Ahora
+            </button>
+          </div>
+
+          <!-- Confirmation (hidden initially) -->
+          <div class="card" id="send-confirm-card" style="display:none"></div>
+
+          <!-- Receipt (hidden initially) -->
+          <div class="card" id="send-receipt-card" style="display:none"></div>
+        </div>
+
+        <div>
+          <!-- Info card -->
+          <div class="card" style="border-left:3px solid var(--blue)">
+            <h4 style="font-size:15px;font-weight:700;color:var(--gray-900);margin-bottom:12px">&#128274; Seguro y transparente</h4>
+            <div style="font-size:13px;color:var(--gray-600);line-height:1.6">
+              <p style="margin-bottom:10px">Cada transaccion se registra en la red Stellar, garantizando transparencia total y liquidacion en segundos.</p>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--gray-100)">
+                <span>&#9889;</span><span>Liquidacion en 3-5 segundos</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--gray-100)">
+                <span>&#128176;</span><span>Comision de solo 0.5%</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--gray-100)">
+                <span>&#127757;</span><span>Sin intermediarios bancarios</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--gray-100)">
+                <span>&#128272;</span><span>Verificable en blockchain</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rate card -->
+          <div class="card" style="margin-top:20px">
+            <div class="card-header">
+              <span class="card-title">Tipo de cambio</span>
+              <span style="font-size:11px;color:var(--gray-400)" id="rate-updated">Actualizado ahora</span>
+            </div>
+            <div id="rates-display">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+                <span style="font-size:13px;color:var(--gray-600)">USD / MXN</span>
+                <span style="font-size:16px;font-weight:700;color:var(--gray-900)">17.15</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+                <span style="font-size:13px;color:var(--gray-600)">USD / GTQ</span>
+                <span style="font-size:16px;font-weight:700;color:var(--gray-900)">7.75</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
+                <span style="font-size:13px;color:var(--gray-600)">USD / HNL</span>
+                <span style="font-size:16px;font-weight:700;color:var(--gray-900)">24.80</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== TANDAS ====== -->
+    <div class="page" id="page-tandas">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <h2>Tandas</h2>
+          <p>Circulos de ahorro comunitario</p>
+        </div>
+        <button class="btn btn-primary" onclick="toggleTandaCreate()">+ Crear tanda</button>
+      </div>
+
+      <!-- Create Tanda Form -->
+      <div class="tanda-create-form card" id="tanda-create-form" style="margin-bottom:20px">
+        <h4 style="font-size:15px;font-weight:700;margin-bottom:16px">Crear nueva tanda</h4>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Nombre de la tanda</label>
+            <input type="text" class="form-input" id="tanda-name" placeholder="Ej: Familia Oaxaca">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contribucion por ronda</label>
+            <div class="amount-input-wrap">
+              <input type="number" class="form-input" id="tanda-amount" placeholder="100" min="1" style="font-size:14px;padding:11px 14px">
+              <span class="currency-tag">USD</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Frecuencia</label>
+            <select class="form-input" id="tanda-frequency">
+              <option value="7">Semanal (7 dias)</option>
+              <option value="14" selected>Quincenal (14 dias)</option>
+              <option value="30">Mensual (30 dias)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Miembros maximos</label>
+            <select class="form-input" id="tanda-members">
+              <option value="3">3 miembros</option>
+              <option value="5" selected>5 miembros</option>
+              <option value="8">8 miembros</option>
+              <option value="10">10 miembros</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button class="btn btn-primary" onclick="createTanda()">Crear tanda</button>
+          <button class="btn btn-secondary" onclick="toggleTandaCreate()">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- Active Tandas -->
+      <div id="tandas-list"></div>
+    </div>
+
+    <!-- ====== HISTORIAL ====== -->
+    <div class="page" id="page-historial">
+      <div class="page-header">
+        <h2>Historial de transacciones</h2>
+        <p>Todas tus remesas y contribuciones</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-bar">
+        <div class="filter-chip active" data-filter="all" onclick="filterTransactions('all',this)">Todas</div>
+        <div class="filter-chip" data-filter="remittance" onclick="filterTransactions('remittance',this)">Remesas</div>
+        <div class="filter-chip" data-filter="tanda" onclick="filterTransactions('tanda',this)">Tandas</div>
+        <div class="filter-chip" data-filter="completed" onclick="filterTransactions('completed',this)">Completadas</div>
+        <div class="filter-chip" data-filter="pending" onclick="filterTransactions('pending',this)">Pendientes</div>
+      </div>
+
+      <!-- Transaction List -->
+      <div class="card">
+        <div class="tx-list" id="full-tx-list"></div>
+      </div>
+
+      <!-- Monthly Summary -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header">
+          <span class="card-title">Resumen mensual</span>
+        </div>
+        <div class="monthly-summary">
+          <div class="monthly-card">
+            <div class="mc-value">$4,850.00</div>
+            <div class="mc-label">Total enviado (marzo)</div>
+          </div>
+          <div class="monthly-card">
+            <div class="mc-value">$83,167.50</div>
+            <div class="mc-label">Total recibido (MXN)</div>
+          </div>
+          <div class="monthly-card">
+            <div class="mc-value" style="color:var(--green)">$24.25</div>
+            <div class="mc-label">Comisiones Puente</div>
+          </div>
+          <div class="monthly-card">
+            <div class="mc-value" style="color:var(--red);text-decoration:line-through;opacity:.6">$300.70</div>
+            <div class="mc-label">Habrias pagado (tradicional)</div>
+          </div>
+        </div>
+        <div class="savings-bar" style="margin-top:16px">
+          <div class="savings-icon">&#128176;</div>
+          <div class="savings-text">
+            <div class="savings-amount">Ahorro este mes: $276.45</div>
+            <div class="savings-label">Eso es suficiente para las despensas de una semana</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PERFIL ====== -->
+    <div class="page" id="page-perfil">
+      <div class="page-header">
+        <h2>Mi perfil</h2>
+        <p>Gestiona tu cuenta y seguridad</p>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <!-- User info -->
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+              <div style="width:60px;height:60px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:700">CG</div>
+              <div>
+                <div style="font-size:18px;font-weight:700;color:var(--gray-900)" id="profile-name">Carlos Garcia</div>
+                <div style="font-size:13px;color:var(--gray-500)" id="profile-email">carlos@puente.app</div>
+                <div style="font-size:12px;color:var(--gray-400);margin-top:2px" id="profile-phone">+1 713 555 0142</div>
+              </div>
+            </div>
+
+            <div class="card-header"><span class="card-title">Verificacion KYC</span></div>
+            <div style="margin-bottom:12px">
+              <span class="kyc-badge enhanced" id="kyc-badge-display">&#9989; Enhanced</span>
+            </div>
+            <div class="kyc-tiers">
+              <div class="kyc-tier">
+                <span style="font-size:16px">&#128100;</span>
+                <span class="tier-name">Basico</span>
+                <span class="tier-limit">$500/dia</span>
+              </div>
+              <div class="kyc-tier current">
+                <span style="font-size:16px">&#9989;</span>
+                <span class="tier-name">Enhanced</span>
+                <span class="tier-limit">$5,000/dia</span>
+              </div>
+              <div class="kyc-tier">
+                <span style="font-size:16px">&#128274;</span>
+                <span class="tier-name">Full</span>
+                <span class="tier-limit">$50,000/dia</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Referral -->
+          <div class="referral-box">
+            <h4>&#127873; Invita a tu familia, ganan ambos</h4>
+            <p>Comparte tu enlace y ambos reciben $5 USD en su primera transaccion</p>
+            <div class="referral-link">
+              <input type="text" value="https://puente.app/ref/carlos-garcia-7x2k" readonly id="referral-input">
+              <button class="btn btn-amber" onclick="copyReferral()">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <!-- Wallet -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">Wallet Stellar</span></div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:14px;font-weight:600;color:var(--gray-700)">Direccion publica</span>
+              <span style="background:var(--blue-light);color:var(--blue);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600">TESTNET</span>
+            </div>
+            <div class="wallet-address" id="wallet-address">GBXK...7Q4R</div>
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--gray-100)">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <span style="font-size:11px;color:var(--gray-500)">Red:</span>
+                <span style="font-size:12px;font-weight:600;color:var(--gray-700)">Stellar Testnet</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:11px;color:var(--gray-500)">Activo:</span>
+                <span style="font-size:12px;font-weight:600;color:var(--gray-700)">USDC (Circle)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="card" style="margin-top:20px">
+            <div class="card-header"><span class="card-title">Estadisticas</span></div>
+            <div class="grid-2" style="gap:12px">
+              <div style="text-align:center;padding:16px;background:var(--gray-50);border-radius:var(--radius-sm)">
+                <div style="font-size:24px;font-weight:700;color:var(--blue)" id="stat-total-sent">$12,400</div>
+                <div style="font-size:11px;color:var(--gray-500);margin-top:2px">Total enviado</div>
+              </div>
+              <div style="text-align:center;padding:16px;background:var(--green-light);border-radius:var(--radius-sm)">
+                <div style="font-size:24px;font-weight:700;color:#065f46" id="stat-total-saved">$1,870</div>
+                <div style="font-size:11px;color:var(--gray-500);margin-top:2px">Ahorrado en comisiones</div>
+              </div>
+              <div style="text-align:center;padding:16px;background:var(--gray-50);border-radius:var(--radius-sm)">
+                <div style="font-size:24px;font-weight:700;color:var(--gray-900)">47</div>
+                <div style="font-size:11px;color:var(--gray-500);margin-top:2px">Transacciones totales</div>
+              </div>
+              <div style="text-align:center;padding:16px;background:var(--gray-50);border-radius:var(--radius-sm)">
+                <div style="font-size:24px;font-weight:700;color:var(--amber)">3</div>
+                <div style="font-size:11px;color:var(--gray-500);margin-top:2px">Referidos activos</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =========================================================================
+// Configuration
+// =========================================================================
+const API_BASE = 'http://localhost:4000';
+const RATE_USD_MXN = 17.15;
+const FEE_BPS = 50; // 0.5%
+const TRAD_FEE_BPS = 620; // 6.2% traditional
+
+// =========================================================================
+// Seed Data (local — demo mode when backend is unavailable)
+// =========================================================================
+const seedUsers = {
+  carlos: {
+    id: 'usr-carlos-001',
+    name: 'Carlos Garcia',
+    email: 'carlos@puente.app',
+    phone: '+1 713 555 0142',
+    country: 'US',
+    stellarPublicKey: 'GBXK4TSPNVEAG3OZNZSXFAQRUIJX3Y3FE7WS7GPJO4GC63GMVL47Q4R',
+    kyc: { level: 'enhanced', verifiedAt: '2025-11-15T00:00:00Z' },
+    lifetimeSent: 12400,
+    tandaIds: ['tanda-fam-oax-001']
+  },
+  maria: {
+    id: 'usr-maria-002',
+    name: 'Maria Lopez',
+    email: 'maria@puente.app',
+    phone: '+52 951 123 4567',
+    country: 'MX',
+    stellarPublicKey: 'GDZM5QHF3CNAUODJYLNPMFWSV6AFHLQK7XCGKRANQWER5SSBNHPX2YOM',
+    kyc: { level: 'basic', verifiedAt: '2026-01-10T00:00:00Z' },
+    lifetimeSent: 800,
+    tandaIds: ['tanda-fam-oax-001']
+  }
+};
+
+const currentUser = seedUsers.carlos;
+let authToken = null;
+
+const seedRemittances = [
+  { id: 'rem-001', senderId: 'usr-carlos-001', receiverId: 'usr-maria-002', senderName: 'Carlos Garcia', receiverName: 'Maria Lopez', amount: 500, fee: 2.50, netAmount: 497.50, convertedAmount: 8532.13, sourceCurrency: 'USD', destCurrency: 'MXN', rate: 17.15, status: 'completed', stellarTxHash: 'a3f8c2d1e9b74...6a2f', createdAt: '2026-03-22T14:30:00Z', memo: 'Para la despensa' },
+  { id: 'rem-002', senderId: 'usr-carlos-001', receiverId: 'usr-maria-002', senderName: 'Carlos Garcia', receiverName: 'Maria Lopez', amount: 1200, fee: 6.00, netAmount: 1194.00, convertedAmount: 20477.10, sourceCurrency: 'USD', destCurrency: 'MXN', rate: 17.15, status: 'completed', stellarTxHash: 'b7e4d9f2a1c36...8d5e', createdAt: '2026-03-15T09:15:00Z', memo: 'Renta marzo' },
+  { id: 'rem-003', senderId: 'usr-carlos-001', receiverId: 'usr-maria-002', senderName: 'Carlos Garcia', receiverName: 'Maria Lopez', amount: 800, fee: 4.00, netAmount: 796.00, convertedAmount: 13651.40, sourceCurrency: 'USD', destCurrency: 'MXN', rate: 17.15, status: 'completed', stellarTxHash: 'c1d2e3f4a5b67...9c3a', createdAt: '2026-03-08T16:45:00Z', memo: 'Medicinas abuela' },
+  { id: 'rem-004', senderId: 'usr-carlos-001', receiverId: 'usr-maria-002', senderName: 'Carlos Garcia', receiverName: 'Maria Lopez', amount: 350, fee: 1.75, netAmount: 348.25, convertedAmount: 5972.49, sourceCurrency: 'USD', destCurrency: 'MXN', rate: 17.15, status: 'pending', stellarTxHash: null, createdAt: '2026-03-23T11:20:00Z', memo: 'Utiles escolares' },
+  { id: 'rem-005', senderId: 'usr-carlos-001', receiverId: 'usr-maria-002', senderName: 'Carlos Garcia', receiverName: 'Maria Lopez', amount: 2000, fee: 10.00, netAmount: 1990.00, convertedAmount: 34128.50, sourceCurrency: 'USD', destCurrency: 'MXN', rate: 17.15, status: 'completed', stellarTxHash: 'e5f6a7b8c9d01...2e4f', createdAt: '2026-02-28T08:00:00Z', memo: 'Ahorro familiar' }
+];
+
+const seedTanda = {
+  id: 'tanda-fam-oax-001',
+  name: 'Familia Oaxaca',
+  organizerId: 'usr-carlos-001',
+  organizerName: 'Carlos Garcia',
+  contributionAmount: 100,
+  currency: 'USD',
+  periodDays: 14,
+  maxMembers: 5,
+  currentRound: 3,
+  status: 'active',
+  createdAt: '2026-01-15T00:00:00Z',
+  nextPayoutAt: '2026-04-01T00:00:00Z',
+  members: [
+    { userId: 'usr-carlos-001', name: 'Carlos Garcia', totalContributed: 200, roundsContributed: 2, hasReceivedPayout: true, missedContributions: 0, status: 'paid' },
+    { userId: 'usr-maria-002', name: 'Maria Lopez', totalContributed: 200, roundsContributed: 2, hasReceivedPayout: true, missedContributions: 0, status: 'paid' },
+    { userId: 'usr-rosa-003', name: 'Rosa Hernandez', totalContributed: 200, roundsContributed: 2, hasReceivedPayout: false, missedContributions: 0, status: 'pending' },
+    { userId: 'usr-pedro-004', name: 'Pedro Garcia', totalContributed: 100, roundsContributed: 1, hasReceivedPayout: false, missedContributions: 1, status: 'missed' },
+    { userId: 'usr-ana-005', name: 'Ana Martinez', totalContributed: 200, roundsContributed: 2, hasReceivedPayout: false, missedContributions: 0, status: 'paid' }
+  ]
+};
+
+const memberColors = ['#0052ff', '#f59e0b', '#7c3aed', '#10b981', '#ef4444'];
+
+// =========================================================================
+// Navigation
+// =========================================================================
+function switchTab(tab) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(`page-${tab}`).classList.add('active');
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => switchTab(item.dataset.tab));
+});
+
+// =========================================================================
+// Toast
+// =========================================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// =========================================================================
+// Modal
+// =========================================================================
+function showModal(html) {
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+}
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// =========================================================================
+// API Helpers
+// =========================================================================
+async function apiGet(path) {
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.warn('API unavailable, using seed data:', e.message);
+    return null;
+  }
+}
+
+async function apiPost(path, body) {
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    return await res.json();
+  } catch (e) {
+    console.warn('API call failed:', e.message);
+    return null;
+  }
+}
+
+// =========================================================================
+// Initialize / Try backend registration
+// =========================================================================
+async function initApp() {
+  // Try to connect to backend
+  const health = await apiGet('/health');
+  if (health && health.status === 'ok') {
+    console.log('Backend connected:', health);
+    // Try to register seed users
+    const regCarlos = await apiPost('/api/v1/auth/register', {
+      email: 'carlos@puente.app',
+      phone: '+17135550142',
+      name: 'Carlos Garcia',
+      stellarPublicKey: 'GBXK4TSPNVEAG3OZNZSXFAQRUIJX3Y3FE7WS7GPJO4GC63GMVL47Q4R',
+      country: 'US'
+    });
+    if (regCarlos && regCarlos.token) {
+      authToken = regCarlos.token;
+      seedUsers.carlos.id = regCarlos.user.id;
+    }
+
+    const regMaria = await apiPost('/api/v1/auth/register', {
+      email: 'maria@puente.app',
+      phone: '+529511234567',
+      name: 'Maria Lopez',
+      stellarPublicKey: 'GDZM5QHF3CNAUODJYLNPMFWSV6AFHLQK7XCGKRANQWER5SSBNHPX2YOM',
+      country: 'MX'
+    });
+    if (regMaria) {
+      seedUsers.maria.id = regMaria.user.id;
+    }
+
+    // Set KYC for Carlos
+    if (authToken) {
+      await apiPost('/api/v1/users/me/kyc', { level: 'enhanced' }).catch(() => {});
+      // The KYC endpoint is PUT, let's use fetch directly
+      await fetch(`${API_BASE}/api/v1/users/me/kyc`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify({ level: 'enhanced' })
+      }).catch(() => {});
+    }
+
+    // Fetch rates
+    const ratesData = await apiGet('/api/v1/rates');
+    if (ratesData && ratesData.rates && ratesData.rates['USD/MXN']) {
+      // Update local rate if backend provides it
+    }
+  } else {
+    console.log('Running in demo mode with seed data');
+  }
+
+  renderRecentTransactions();
+  renderRecipientDropdown();
+  renderTandas();
+  renderTandaSummary();
+  renderFullHistory('all');
+  loadRates();
+}
+
+// =========================================================================
+// Rates
+// =========================================================================
+async function loadRates() {
+  const data = await apiGet('/api/v1/rates');
+  if (data && data.rates) {
+    const ratesEl = document.getElementById('rates-display');
+    const pairs = Object.entries(data.rates);
+    let html = '';
+    for (const [pair, info] of pairs) {
+      if (['USD/MXN','USD/GTQ','USD/HNL'].includes(pair)) {
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+          <span style="font-size:13px;color:var(--gray-600)">${pair}</span>
+          <span style="font-size:16px;font-weight:700;color:var(--gray-900)">${info.rate.toFixed(2)}</span>
+        </div>`;
+      }
+    }
+    if (html) ratesEl.innerHTML = html;
+  }
+}
+
+// =========================================================================
+// Send Money — Conversion Preview
+// =========================================================================
+function updateConversion() {
+  const amount = parseFloat(document.getElementById('send-amount').value) || 0;
+  const preview = document.getElementById('conversion-preview');
+  const feeCompare = document.getElementById('fee-compare');
+
+  if (amount <= 0) {
+    preview.style.display = 'none';
+    feeCompare.style.display = 'none';
+    return;
+  }
+
+  const fee = (amount * FEE_BPS) / 10000;
+  const net = amount - fee;
+  const converted = net * RATE_USD_MXN;
+  const tradFee = (amount * TRAD_FEE_BPS) / 10000;
+  const savings = tradFee - fee;
+
+  document.getElementById('conv-amount').textContent = `$${converted.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} MXN`;
+  document.getElementById('conv-rate').textContent = `1 USD = ${RATE_USD_MXN} MXN | Comision: $${fee.toFixed(2)} USD`;
+  document.getElementById('fee-traditional').textContent = `$${tradFee.toFixed(2)} (6.2%)`;
+  document.getElementById('fee-puente').textContent = `$${fee.toFixed(2)} (0.5%)`;
+  document.getElementById('fee-savings-text').textContent = `Te ahorras $${savings.toFixed(2)}`;
+
+  preview.style.display = 'block';
+  feeCompare.style.display = 'block';
+}
+
+// =========================================================================
+// Send Money — Initiate
+// =========================================================================
+function initiateSend() {
+  const amount = parseFloat(document.getElementById('send-amount').value) || 0;
+  const recipientId = document.getElementById('send-recipient').value;
+  const clabe = document.getElementById('send-clabe').value;
+  const memo = document.getElementById('send-memo').value;
+
+  if (amount <= 0) { showToast('Ingresa un monto valido'); return; }
+  if (!recipientId) { showToast('Selecciona un destinatario'); return; }
+
+  const fee = (amount * FEE_BPS) / 10000;
+  const net = amount - fee;
+  const converted = net * RATE_USD_MXN;
+  const recipient = recipientId === seedUsers.maria.id ? 'Maria Lopez' : 'Destinatario';
+
+  showModal(`
+    <h3>Confirmar envio</h3>
+    <div class="detail-row"><span class="dl">Destinatario</span><span class="dv">${recipient}</span></div>
+    <div class="detail-row"><span class="dl">Monto</span><span class="dv">$${amount.toFixed(2)} USD</span></div>
+    <div class="detail-row"><span class="dl">Comision Puente</span><span class="dv" style="color:var(--green)">$${fee.toFixed(2)} USD</span></div>
+    <div class="detail-row"><span class="dl">Tipo de cambio</span><span class="dv">1 USD = ${RATE_USD_MXN} MXN</span></div>
+    <div class="detail-row" style="border-bottom:none"><span class="dl" style="font-weight:700;color:var(--gray-800)">Recibe</span><span class="dv" style="font-size:18px;color:var(--amber-dark);font-weight:800">$${converted.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} MXN</span></div>
+    ${memo ? `<div style="margin-top:8px;padding:8px 12px;background:var(--gray-50);border-radius:6px;font-size:12px;color:var(--gray-500)">Memo: ${memo}</div>` : ''}
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()" style="flex:1">Cancelar</button>
+      <button class="btn btn-primary btn-lg" onclick="confirmSend(${amount},'${recipientId}','${memo}')" style="flex:2">Confirmar envio</button>
+    </div>
+  `);
+}
+
+async function confirmSend(amount, recipientId, memo) {
+  closeModal();
+  const btnEl = document.getElementById('btn-enviar');
+  btnEl.textContent = 'Enviando...';
+  btnEl.disabled = true;
+
+  // Try backend first
+  let result = null;
+  if (authToken) {
+    result = await apiPost('/api/v1/remittances', {
+      receiverId: recipientId,
+      amount,
+      sourceCurrency: 'USD',
+      destCurrency: 'MXN',
+      memo
+    });
+  }
+
+  // Simulate if backend unavailable
+  const fee = (amount * FEE_BPS) / 10000;
+  const net = amount - fee;
+  const converted = net * RATE_USD_MXN;
+  const txHash = result?.remittance?.stellarTxHash || `sim_${Date.now().toString(16).slice(-12)}`;
+  const remId = result?.remittance?.id || `rem-${Date.now()}`;
+
+  // If backend succeeded, try to complete it
+  if (result && authToken) {
+    await apiPost(`/api/v1/remittances/${remId}/complete`, {});
+  }
+
+  // Add to local seed data
+  seedRemittances.unshift({
+    id: remId,
+    senderId: currentUser.id,
+    receiverId: recipientId,
+    senderName: currentUser.name,
+    receiverName: recipientId === seedUsers.maria.id ? 'Maria Lopez' : 'Destinatario',
+    amount, fee, netAmount: net, convertedAmount: converted,
+    sourceCurrency: 'USD', destCurrency: 'MXN', rate: RATE_USD_MXN,
+    status: 'completed', stellarTxHash: txHash,
+    createdAt: new Date().toISOString(), memo
+  });
+
+  // Show receipt
+  setTimeout(() => {
+    document.getElementById('send-form-card').style.display = 'none';
+    document.getElementById('send-receipt-card').style.display = 'block';
+    document.getElementById('send-receipt-card').innerHTML = `
+      <div class="receipt">
+        <div class="receipt-check">&#9989;</div>
+        <h3>Envio exitoso</h3>
+        <div class="receipt-amount">$${converted.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} MXN</div>
+        <p style="font-size:13px;color:var(--gray-500)">Se enviaron $${amount.toFixed(2)} USD a ${recipientId === seedUsers.maria.id ? 'Maria Lopez' : 'Destinatario'}</p>
+        <div style="margin-top:16px;text-align:left">
+          <div class="detail-row"><span class="dl">Comision</span><span class="dv">$${fee.toFixed(2)} USD</span></div>
+          <div class="detail-row"><span class="dl">Tipo de cambio</span><span class="dv">1 USD = ${RATE_USD_MXN} MXN</span></div>
+          <div class="detail-row"><span class="dl">Estado</span><span class="dv"><span class="tx-status completed">Completado</span></span></div>
+        </div>
+        <div class="receipt-hash">TX: ${txHash}</div>
+        <button class="btn btn-primary btn-full" style="margin-top:20px" onclick="resetSendForm()">Enviar otro</button>
+      </div>
+    `;
+    btnEl.textContent = '&#128184; Enviar Ahora';
+    btnEl.disabled = false;
+    renderRecentTransactions();
+    renderFullHistory('all');
+    showToast('Remesa enviada exitosamente');
+  }, 1500);
+}
+
+function resetSendForm() {
+  document.getElementById('send-form-card').style.display = 'block';
+  document.getElementById('send-receipt-card').style.display = 'none';
+  document.getElementById('send-amount').value = '';
+  document.getElementById('send-recipient').value = '';
+  document.getElementById('send-clabe').value = '';
+  document.getElementById('send-memo').value = '';
+  document.getElementById('conversion-preview').style.display = 'none';
+  document.getElementById('fee-compare').style.display = 'none';
+}
+
+function quickSend(name) {
+  switchTab('enviar');
+  if (name === 'Maria Lopez') {
+    document.getElementById('send-recipient').value = seedUsers.maria.id;
+  }
+}
+
+// =========================================================================
+// Recipient Dropdown
+// =========================================================================
+function renderRecipientDropdown() {
+  const sel = document.getElementById('send-recipient');
+  sel.innerHTML = '<option value="">Seleccionar destinatario...</option>';
+  sel.innerHTML += `<option value="${seedUsers.maria.id}">Maria Lopez (Oaxaca, MX)</option>`;
+  sel.innerHTML += `<option value="usr-rosa-003">Rosa Hernandez (Oaxaca, MX)</option>`;
+  sel.innerHTML += `<option value="usr-pedro-004">Pedro Garcia (CDMX, MX)</option>`;
+}
+
+// =========================================================================
+// Recent Transactions
+// =========================================================================
+function renderRecentTransactions() {
+  const list = document.getElementById('recent-tx-list');
+  const recent = seedRemittances.slice(0, 4);
+  list.innerHTML = recent.map(tx => renderTxRow(tx)).join('');
+}
+
+function renderTxRow(tx) {
+  const isOutgoing = tx.senderId === currentUser.id;
+  const name = isOutgoing ? tx.receiverName : tx.senderName;
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0,2);
+  const date = new Date(tx.createdAt);
+  const dateStr = date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+  const timeStr = date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+
+  return `
+    <div class="tx-row">
+      <div class="tx-icon ${isOutgoing ? 'outgoing' : 'incoming'}">${isOutgoing ? '&#8593;' : '&#8595;'}</div>
+      <div class="tx-info">
+        <div class="tx-recipient">${name}</div>
+        <div class="tx-date">${dateStr} ${timeStr}${tx.memo ? ' — ' + tx.memo : ''}</div>
+        ${tx.stellarTxHash ? `<div class="tx-hash">TX: ${tx.stellarTxHash}</div>` : ''}
+      </div>
+      <div class="tx-amounts">
+        <div class="tx-usd">${isOutgoing ? '-' : '+'}$${tx.amount.toFixed(2)} USD</div>
+        <div class="tx-mxn">$${tx.convertedAmount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} MXN</div>
+      </div>
+      <span class="tx-status ${tx.status}">${tx.status === 'completed' ? 'Completado' : tx.status === 'pending' ? 'Pendiente' : 'Reembolsado'}</span>
+    </div>
+  `;
+}
+
+// =========================================================================
+// Full History
+// =========================================================================
+function renderFullHistory(filter) {
+  const list = document.getElementById('full-tx-list');
+  let txs = [...seedRemittances];
+
+  if (filter === 'remittance') txs = txs.filter(t => true);
+  else if (filter === 'tanda') { list.innerHTML = '<p style="padding:20px;text-align:center;color:var(--gray-400)">No hay contribuciones de tanda aun</p>'; return; }
+  else if (filter === 'completed') txs = txs.filter(t => t.status === 'completed');
+  else if (filter === 'pending') txs = txs.filter(t => t.status === 'pending');
+
+  if (txs.length === 0) {
+    list.innerHTML = '<p style="padding:20px;text-align:center;color:var(--gray-400)">No hay transacciones</p>';
+    return;
+  }
+
+  list.innerHTML = txs.map(tx => renderTxRow(tx)).join('');
+}
+
+function filterTransactions(filter, el) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderFullHistory(filter);
+}
+
+// =========================================================================
+// Tandas
+// =========================================================================
+function renderTandas() {
+  const container = document.getElementById('tandas-list');
+  const t = seedTanda;
+  const progress = (t.currentRound / t.maxMembers) * 100;
+
+  let membersHtml = t.members.map((m, i) => {
+    const initials = m.name.split(' ').map(w => w[0]).join('').slice(0,2);
+    const statusIcon = m.status === 'paid' ? '&#9989;' : m.status === 'pending' ? '&#9203;' : '&#10060;';
+    return `
+      <div class="tanda-member-row">
+        <div class="m-avatar" style="background:${memberColors[i]}">${initials}</div>
+        <div class="m-name">${m.name}${m.userId === t.organizerId ? ' <span style="font-size:10px;background:var(--blue-light);color:var(--blue);padding:1px 6px;border-radius:4px">Organizador</span>' : ''}</div>
+        <div class="m-amount">$${m.totalContributed} contribuido</div>
+        <div class="m-status">${statusIcon}</div>
+      </div>
+    `;
+  }).join('');
+
+  let payoutSlots = '';
+  for (let i = 1; i <= t.maxMembers; i++) {
+    const cls = i < t.currentRound ? 'done' : i === t.currentRound ? 'current' : 'upcoming';
+    payoutSlots += `<div class="payout-slot ${cls}">R${i}</div>`;
+  }
+
+  container.innerHTML = `
+    <div class="tanda-card">
+      <div class="tanda-header">
+        <div class="tanda-avatar-group">
+          ${t.members.map((m, i) => `<div class="t-avatar" style="background:${memberColors[i]}">${m.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>`).join('')}
+        </div>
+        <div style="flex:1">
+          <div class="tanda-name">${t.name}</div>
+          <div class="tanda-meta">$${t.contributionAmount} ${t.currency} cada ${t.periodDays} dias &middot; ${t.members.length}/${t.maxMembers} miembros</div>
+        </div>
+        <span class="tx-status ${t.status === 'active' ? 'completed' : 'pending'}" style="text-transform:capitalize">${t.status === 'active' ? 'Activa' : t.status}</span>
+      </div>
+
+      <div class="tanda-progress">
+        <div class="tanda-progress-bar"><div class="tanda-progress-fill" style="width:${progress}%"></div></div>
+        <div class="tanda-stats">
+          <span>Ronda ${t.currentRound} de ${t.maxMembers}</span>
+          <span>Proximo pago: ${new Date(t.nextPayoutAt).toLocaleDateString('es-MX',{day:'numeric',month:'short'})}</span>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="card-header"><span class="card-title">Calendario de pagos</span></div>
+        <div class="payout-calendar">${payoutSlots}</div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="card-header"><span class="card-title">Miembros</span></div>
+        <div class="tanda-members-list">${membersHtml}</div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:10px">
+        <button class="btn btn-primary btn-full" onclick="contributeTanda()">&#128176; Contribuir $${t.contributionAmount} ${t.currency}</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTandaSummary() {
+  const container = document.getElementById('inicio-tandas-summary');
+  const t = seedTanda;
+  const progress = (t.currentRound / t.maxMembers) * 100;
+
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;padding:8px 0">
+      <div class="tanda-avatar-group" style="margin:0">
+        ${t.members.slice(0,3).map((m, i) => `<div class="t-avatar" style="background:${memberColors[i]};width:28px;height:28px;font-size:10px">${m.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>`).join('')}
+        ${t.members.length > 3 ? `<div class="t-avatar" style="background:var(--gray-300);width:28px;height:28px;font-size:10px;color:var(--gray-600)">+${t.members.length-3}</div>` : ''}
+      </div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600;color:var(--gray-800)">${t.name}</div>
+        <div style="font-size:12px;color:var(--gray-500)">Ronda ${t.currentRound}/${t.maxMembers} &middot; $${t.contributionAmount} ${t.currency}</div>
+      </div>
+      <div style="width:80px">
+        <div class="tanda-progress-bar"><div class="tanda-progress-fill" style="width:${progress}%"></div></div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleTandaCreate() {
+  const form = document.getElementById('tanda-create-form');
+  form.classList.toggle('active');
+}
+
+async function createTanda() {
+  const name = document.getElementById('tanda-name').value.trim();
+  const amount = parseFloat(document.getElementById('tanda-amount').value) || 0;
+  const frequency = parseInt(document.getElementById('tanda-frequency').value);
+  const maxMembers = parseInt(document.getElementById('tanda-members').value);
+
+  if (!name) { showToast('Ingresa un nombre para la tanda'); return; }
+  if (amount <= 0) { showToast('Ingresa un monto valido'); return; }
+
+  // Try backend
+  if (authToken) {
+    const result = await apiPost('/api/v1/tandas', {
+      name,
+      contributionAmount: amount,
+      currency: 'USD',
+      periodDays: frequency,
+      maxMembers
+    });
+    if (result) {
+      showToast(`Tanda "${name}" creada exitosamente`);
+      toggleTandaCreate();
+      return;
+    }
+  }
+
+  showToast(`Tanda "${name}" creada exitosamente`);
+  toggleTandaCreate();
+}
+
+async function contributeTanda() {
+  const t = seedTanda;
+
+  // Try backend
+  if (authToken && t.id) {
+    await apiPost(`/api/v1/tandas/${t.id}/contribute`, {});
+  }
+
+  showModal(`
+    <div class="receipt">
+      <div class="receipt-check">&#9989;</div>
+      <h3>Contribucion registrada</h3>
+      <div class="receipt-amount">$${t.contributionAmount} ${t.currency}</div>
+      <p style="font-size:13px;color:var(--gray-500)">Tanda: ${t.name} &middot; Ronda ${t.currentRound}</p>
+      <div style="margin-top:20px">
+        <button class="btn btn-primary btn-full" onclick="closeModal()">Cerrar</button>
+      </div>
+    </div>
+  `);
+  showToast('Contribucion de tanda registrada');
+}
+
+// =========================================================================
+// Profile
+// =========================================================================
+function copyReferral() {
+  const input = document.getElementById('referral-input');
+  navigator.clipboard.writeText(input.value).then(() => {
+    showToast('Enlace copiado al portapapeles');
+  }).catch(() => {
+    input.select();
+    document.execCommand('copy');
+    showToast('Enlace copiado');
+  });
+}
+
+// =========================================================================
+// Boot
+// =========================================================================
+initApp();
+</script>
+</body>
+</html>
